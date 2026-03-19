@@ -4,6 +4,10 @@
 #include <cmath>
 #include <algorithm>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 // --- SHADEREK ---
 const char* vertexShaderSource = R"(
     #version 330 core
@@ -27,23 +31,23 @@ const char* fragmentShaderSource = R"(
         vec3 red = vec3(1.0, 0.0, 0.0);
         vec3 green = vec3(0.0, 1.0, 0.0);
 
-        vec3 color = yellow; // S·rga h·ttÈr (Kˆtelezı 1.)
+        vec3 color = yellow; // S√°rga h√°tt√©r (K√∂telez≈ë 1.)
         float radius = 50.0;
 
-        // Kˆr rajzol·sa (Kˆtelezı 2.)
+        // K√∂r rajzol√°sa (K√∂telez≈ë 2.)
         float dist = distance(uv, u_circlePos);
         if (dist < radius) {
             float t = dist / radius;
             if (u_intersecting) {
-                // METSZ…SKOR: SzÌncsere tˆrtÈnik (KˆzÈp zˆld, szÈl piros)
+                // METSZ√âSKOR: Sz√≠ncsere
                 color = mix(green, red, t); 
             } else {
-                // ALAP¡LLAPOT: Piros centrum, zˆld hat·rvonal (Feladat 2. pont)
+                // ALAP√ÅLLAPOT: Piros centrum, z√∂ld hat√°rvonal (Feladat 2. pont)
                 color = mix(red, green, t); 
             }
         }
 
-        // KÈk szakasz (Kˆtelezı 4.)
+        // K√©k szakasz (K√∂telez≈ë 4.) - 1/3 sz√©less√©g = 200 pixel, 3 pixel vastag
         if (uv.x >= 200.0 && uv.x <= 400.0 && abs(uv.y - u_lineY) <= 1.5) {
             color = blue;
         }
@@ -52,58 +56,61 @@ const char* fragmentShaderSource = R"(
     }
 )";
 
-// ¡llapotv·ltozÛk
+// √Ållapotv√°ltoz√≥k
 float circleX = 300.0f;
-float circleY = 300.0f; // Fixen kˆzÈpen marad az Y tengelyen
-float lineY = 300.0f;   // A kÈk szakasz magass·ga
-float dx = 4.0f;        // VÌzszintes sebessÈg
+float circleY = 300.0f;
+float lineY = 300.0f;
+float dx = 4.0f;        // Kezdeti sebess√©g (v√≠zszintes)
+float dy = 0.0f;        // Kezdeti f√ºgg≈ëleges sebess√©g
 
-// Felhaszn·lÛi interakciÛ (Szabadon v·laszthatÛ 1.)
+// Felhaszn√°l√≥i interakci√≥
 void processInput(GLFWwindow* window) {
+    // K√©k szakasz mozgat√°sa (Szabadon v√°laszthat√≥ 1.)
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) lineY += 5.0f;
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) lineY -= 5.0f;
 
-    // Hat·rok betart·sa
+    // --- SZABADON V√ÅLASZTHAT√ì 3. FELADAT ---
+    // 'S' billenty≈±re 25 fokos sz√∂gben, 10 egys√©gnyi sebess√©ggel indul el
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        float alpha = 25.0f * (M_PI / 180.0f); // fokb√≥l radi√°n
+        float speed = 10.0f;                   // 10 pixel hossz√∫ vektor
+        dx = speed * cos(alpha);
+        dy = speed * sin(alpha);
+    }
+
+    // Hat√°rok a szakasznak
     if (lineY < 2) lineY = 2;
     if (lineY > 598) lineY = 598;
 }
 
+// Metsz√©s vizsg√°lata (Szabadon v√°laszthat√≥ 2.-h√∂z)
 bool checkIntersection() {
+    // Legk√∂zelebbi pont a szakaszon (X: 200-400 tartom√°nyban)
     float closestX = std::max(200.0f, std::min(circleX, 400.0f));
     float distSq = pow(circleX - closestX, 2) + pow(circleY - lineY, 2);
-    return distSq <= pow(50.0f, 2);
+    return distSq <= pow(50.0f, 2); // Sugarat (50) n√©zz√ºk
 }
 
 void printInstructions() {
- 
-    std::cout << "SZAMITOGEPES GRAFIKA - 1. BEADANDO FELADAT" << std::endl;
- 
-    std::cout << "IRANYITAS:" << std::endl;
-    std::cout << "  [FEL NYIL]   - Kek szakasz mozgatasa FELFELE" << std::endl;
-    std::cout << "  [LE NYIL]    - Kek szakasz mozgatasa LEFELE" << std::endl;
- 
-    std::cout << "A PROGRAM MUKODESE:" << std::endl;
-    std::cout << "1. A kor automatikusan mozog vizszintesen az X tengely menten." << std::endl;
-    std::cout << "2. A kepernyo szelet erintve a kor visszapattan." << std::endl;
-    std::cout << "3. Ha a kor es a kek szakasz osszeer (METSZIK EGYMAST):" << std::endl;
-    std::cout << "   -> A kor szinei megvaltoznak (kozep zold lesz)." << std::endl;
-    std::cout << "4. Ha nem ernek ossze:" << std::endl;
-    std::cout << "   -> A kor kozepe piros marad." << std::endl;
- 
+    std::cout << "SZAMITOGEPES GRAFIKA - 1. BEADANDO" << std::endl;
+    std::cout << "----------------------------------" << std::endl;
+    std::cout << "[FEL/LE NYIL] - Kek szakasz mozgatasa" << std::endl;
+    std::cout << "[S]           - INDITAS: 25 fokos szogben mozgatas)" << std::endl;
+    std::cout << "A kor szine megvaltozik, ha metszi a kek szakaszt." << std::endl;
 }
 
 int main() {
-    // T·jÈkoztatÛ kiÌr·sa a konzolra
     printInstructions();
 
     if (!glfwInit()) return -1;
 
+    // 600x600-as ablak (K√∂telez≈ë 1.)
     GLFWwindow* window = glfwCreateWindow(600, 600, "Grafika Beadando 1", NULL, NULL);
     if (!window) { glfwTerminate(); return -1; }
     glfwMakeContextCurrent(window);
     glewInit();
 
-    // Shader ˆssze·llÌt·s
+    // Shader √∂ssze√°ll√≠t√°s
     unsigned int vs = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vs, 1, &vertexShaderSource, NULL);
     glCompileShader(vs);
@@ -115,7 +122,7 @@ int main() {
     glLinkProgram(prog);
     glUseProgram(prog);
 
-    // Teljes ablakot lefedı nÈgyszˆg
+    // Teljes k√©perny≈ët lefed≈ë t√©glalap (2 db h√°romsz√∂g)
     float vertices[] = { -1,-1, 1,-1, -1,1, 1,-1, 1,1, -1,1 };
     unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO); glGenBuffers(1, &VBO);
@@ -129,18 +136,41 @@ int main() {
     int lineLoc = glGetUniformLocation(prog, "u_lineY");
     int intersectLoc = glGetUniformLocation(prog, "u_intersecting");
 
+    // Render ciklus
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
-        // Vizszintes mozg·s Ès pattog·s (Kˆtelezı 3.)
+        // Mozgat√°s
         circleX += dx;
-        if (circleX <= 50.0f || circleX >= 550.0f) {
+        circleY += dy;
+
+        // VISSZAPATTAN√ÅS (K√∂telez≈ë 3. √©s Szabadon v√°laszthat√≥ 3. kombin√°lva)
+        // X ir√°ny√∫ falak
+        if (circleX <= 50.0f) {
+            circleX = 50.0f;
+            dx *= -1.0f;
+        }
+        else if (circleX >= 550.0f) {
+            circleX = 550.0f;
             dx *= -1.0f;
         }
 
+        // Y ir√°ny√∫ falak (Szabadon v√°laszthat√≥ 3. r√©sz: "k√©perny≈ë sz√©leit pontosan √©rintve")
+        if (circleY <= 50.0f) {
+            circleY = 50.0f;
+            dy *= -1.0f;
+        }
+        else if (circleY >= 550.0f) {
+            circleY = 550.0f;
+            dy *= -1.0f;
+        }
+
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // Uniformok k√ºld√©se
         glUniform2f(circleLoc, circleX, circleY);
         glUniform1f(lineLoc, lineY);
+        // Szabadon v√°laszthat√≥ 2.: Sz√≠ncsere ha nincs metsz√©sben
         glUniform1i(intersectLoc, checkIntersection());
 
         glBindVertexArray(VAO);
