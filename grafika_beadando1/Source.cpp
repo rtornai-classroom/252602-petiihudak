@@ -2,11 +2,11 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <cmath>
+#define _USE_MATH_DEFINES
 #include <algorithm>
+#include <math.h>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+
 
 // --- SHADEREK ---
 const char* vertexShaderSource = R"(
@@ -40,10 +40,10 @@ const char* fragmentShaderSource = R"(
             float t = dist / radius;
             if (u_intersecting) {
                 // METSZÉSKOR: Színcsere
-                color = mix(green, red, t); 
+                color = mix(red, green, t); 
             } else {
                 // ALAPÁLLAPOT: Piros centrum, zöld határvonal (Feladat 2. pont)
-                color = mix(red, green, t); 
+                color = mix(green, red, t); 
             }
         }
 
@@ -60,20 +60,20 @@ const char* fragmentShaderSource = R"(
 float circleX = 300.0f;
 float circleY = 300.0f;
 float lineY = 300.0f;
-float dx = 4.0f;        // Kezdeti sebesség (vízszintes)
+float dx = 0.05f;        // Kezdeti sebesség (vízszintes)
 float dy = 0.0f;        // Kezdeti függőleges sebesség
 
 // Felhasználói interakció
 void processInput(GLFWwindow* window) {
     // Kék szakasz mozgatása (Szabadon választható 1.)
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) lineY += 5.0f;
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) lineY -= 5.0f;
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) lineY += 0.05f;
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) lineY -= 0.05f;
 
-    // --- SZABADON VÁLASZTHATÓ 3. FELADAT ---
+   
     // 'S' billentyűre 25 fokos szögben, 10 egységnyi sebességgel indul el
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         float alpha = 25.0f * (M_PI / 180.0f); // fokból radián
-        float speed = 10.0f;                   // 10 pixel hosszú vektor
+        float speed = 0.05f;                   // 10 pixel hosszú vektor
         dx = speed * cos(alpha);
         dy = speed * sin(alpha);
     }
@@ -104,7 +104,7 @@ int main() {
 
     if (!glfwInit()) return -1;
 
-    // 600x600-as ablak (Kötelező 1.)
+    // 600x600-as ablak 
     GLFWwindow* window = glfwCreateWindow(600, 600, "Grafika Beadando 1", NULL, NULL);
     if (!window) { glfwTerminate(); return -1; }
     glfwMakeContextCurrent(window);
@@ -144,7 +144,7 @@ int main() {
         circleX += dx;
         circleY += dy;
 
-        // VISSZAPATTANÁS (Kötelező 3. és Szabadon választható 3. kombinálva)
+        // VISSZAPATTANÁS
         // X irányú falak
         if (circleX <= 50.0f) {
             circleX = 50.0f;
@@ -155,7 +155,7 @@ int main() {
             dx *= -1.0f;
         }
 
-        // Y irányú falak (Szabadon választható 3. rész: "képernyő széleit pontosan érintve")
+        // Y irányú falak 
         if (circleY <= 50.0f) {
             circleY = 50.0f;
             dy *= -1.0f;
