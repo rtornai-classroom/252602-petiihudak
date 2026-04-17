@@ -4,21 +4,21 @@
 #include <cmath>
 #include <iostream>
 
-// Ablak méretei
+// Ablak mÃ©retei
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
 
-// Kontrollpont struktúra
+// Kontrollpont struktÃºra
 struct Point {
     float x, y;
 };
 
-// Globális változók
+// GlobÃ¡lis vÃ¡ltozÃ³k
 std::vector<Point> controlPoints;
-int draggedPointIndex = -1; // -1 jelenti, hogy épp nem mozgatunk pontot
-const float POINT_RADIUS = 6.0f; // A pontok átmérõje (3 <= d <= 9)
+int draggedPointIndex = -1; // -1 jelenti, hogy Ã©pp nem mozgatunk pontot
+const float POINT_RADIUS = 6.0f; // A pontok Ã¡tmÃ©rÃµje (3 <= d <= 9)
 
-// Faktoriális számítás a Binomiális együtthatóhoz
+// FaktoriÃ¡lis szÃ¡mÃ­tÃ¡s a BinomiÃ¡lis egyÃ¼tthatÃ³hoz
 unsigned long long factorial(int n) {
     if (n <= 1) return 1;
     unsigned long long res = 1;
@@ -26,24 +26,31 @@ unsigned long long factorial(int n) {
     return res;
 }
 
-// Binomiális együttható (n alatt a k)
-unsigned long long binomialCoefficient(int n, int k) {
+// BinomiÃ¡lis egyÃ¼tthatÃ³
+double binomialCoefficient(int n, int k) {
     if (k < 0 || k > n) return 0;
-    return factorial(n) / (factorial(k) * factorial(n - k));
+    if (k == 0 || k == n) return 1;
+    if (k > n / 2) k = n - k; // Szimmetria kihasznÃ¡lÃ¡sa (n alatt k = n alatt n-k)
+
+    double res = 1.0;
+    for (int i = 1; i <= k; ++i) {
+        res = res * (n - k + i) / i;
+    }
+    return res;
 }
 
-// Egér kattintás eseménykezelõje
+// EgÃ©r kattintÃ¡s esemÃ©nykezelÃµje
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
 
     if (action == GLFW_PRESS) {
-        // Ellenõrizzük, hogy kattintottunk-e létezõ pontra
+        // EllenÃµrizzÃ¼k, hogy kattintottunk-e lÃ©tezÃµ pontra
         int clickedIndex = -1;
         for (size_t i = 0; i < controlPoints.size(); ++i) {
             float dx = controlPoints[i].x - (float)xpos;
             float dy = controlPoints[i].y - (float)ypos;
-            if (std::sqrt(dx * dx + dy * dy) <= POINT_RADIUS * 1.5f) { // Kis ráhagyás a könnyebb kattintásért
+            if (std::sqrt(dx * dx + dy * dy) <= POINT_RADIUS * 1.5f) { // Kis rÃ¡hagyÃ¡s a kÃ¶nnyebb kattintÃ¡sÃ©rt
                 clickedIndex = i;
                 break;
             }
@@ -51,28 +58,28 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
             if (clickedIndex != -1) {
-                // Meglévõ pont megfogása (Drag and Drop)
+                // MeglÃ©vÃµ pont megfogÃ¡sa (Drag and Drop)
                 draggedPointIndex = clickedIndex;
             }
             else {
-                // Új pont létrehozása üres helyre kattintva
+                // Ãšj pont lÃ©trehozÃ¡sa Ã¼res helyre kattintva
                 controlPoints.push_back({ (float)xpos, (float)ypos });
             }
         }
         else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-            // Meglévõ pont eltávolítása jobb gombbal
+            // MeglÃ©vÃµ pont eltÃ¡volÃ­tÃ¡sa jobb gombbal
             if (clickedIndex != -1) {
                 controlPoints.erase(controlPoints.begin() + clickedIndex);
             }
         }
     }
     else if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT) {
-        // Pont elengedése
+        // Pont elengedÃ©se
         draggedPointIndex = -1;
     }
 }
 
-// Egér mozgás eseménykezelõje (Drag and drop)
+// EgÃ©r mozgÃ¡s esemÃ©nykezelÃµje (Drag and drop)
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
     if (draggedPointIndex != -1) {
         controlPoints[draggedPointIndex].x = (float)xpos;
@@ -80,15 +87,15 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
     }
 }
 
-// Képernyõ újra-rajzolása
+// KÃ©pernyÃµ Ãºjra-rajzolÃ¡sa
 void display() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     int n = controlPoints.size() - 1;
 
-    // 1. Kontrollpoligon kirajzolása (sárga)
+    // 1. Kontrollpoligon kirajzolÃ¡sa (sÃ¡rga)
     if (controlPoints.size() > 1) {
-        glColor3f(1.0f, 1.0f, 0.0f); // sárga szín
+        glColor3f(1.0f, 1.0f, 0.0f); // sÃ¡rga szÃ­n
         glBegin(GL_LINE_STRIP);
         for (const auto& p : controlPoints) {
             glVertex2f(p.x, p.y);
@@ -96,17 +103,17 @@ void display() {
         glEnd();
     }
 
-    // 2. Bézier-görbe kirajzolása törött vonallal (cyan)
+    // 2. BÃ©zier-gÃ¶rbe kirajzolÃ¡sa tÃ¶rÃ¶tt vonallal (cyan)
     if (controlPoints.size() >= 2) {
-        glColor3f(0.0f, 1.0f, 1.0f); // cyan szín
+        glColor3f(0.0f, 1.0f, 1.0f); // cyan szÃ­n
         glBegin(GL_LINE_STRIP);
-        int resolution = 100; // Törött vonal részletessége
+        int resolution = 100; // TÃ¶rÃ¶tt vonal rÃ©szletessÃ©ge
         for (int i = 0; i <= resolution; ++i) {
             float t = (float)i / resolution;
             float px = 0.0f;
             float py = 0.0f;
 
-            // Általános Bézier formula alkalmazása tetszõleges fokszámra
+            // ÃltalÃ¡nos BÃ©zier formula alkalmazÃ¡sa tetszÃµleges fokszÃ¡mra
             for (int j = 0; j <= n; ++j) {
                 float blend = binomialCoefficient(n, j) * std::pow(1 - t, n - j) * std::pow(t, j);
                 px += blend * controlPoints[j].x;
@@ -117,10 +124,10 @@ void display() {
         glEnd();
     }
 
-    // 3. Kontrollpontok kirajzolása (magenta)
+    // 3. Kontrollpontok kirajzolÃ¡sa (magenta)
     if (!controlPoints.empty()) {
-        glColor3f(1.0f, 0.0f, 1.0f); // magenta szín
-        glPointSize(POINT_RADIUS * 2.0f); // Átmérõ beállítása
+        glColor3f(1.0f, 0.0f, 1.0f); // magenta szÃ­n
+        glPointSize(POINT_RADIUS * 2.0f); // ÃtmÃ©rÃµ beÃ¡llÃ­tÃ¡sa
         glEnable(GL_POINT_SMOOTH); // Kerek pontok
         glBegin(GL_POINTS);
         for (const auto& p : controlPoints) {
@@ -139,7 +146,7 @@ int main() {
     std::cout << "  * BAL egergomb (ponton nyomva): Pont mozgatasa" << std::endl;
     std::cout << "  * JOBB egergomb (ponton kattintva): Pont torlese" << std::endl;
     // ---------------------------------------------------
-    // Kezdeti 4 kontrollpont (harmadfokú görbéhez)
+    // Kezdeti 4 kontrollpont (harmadfokÃº gÃ¶rbÃ©hez)
     controlPoints.push_back({ 100, 300 });
     controlPoints.push_back({ 300, 100 });
     controlPoints.push_back({ 500, 500 });
@@ -156,19 +163,19 @@ int main() {
     glfwMakeContextCurrent(window);
     glewInit();
 
-    // Visszahívó függvények (Callback) beállítása az egérhez
+    // VisszahÃ­vÃ³ fÃ¼ggvÃ©nyek (Callback) beÃ¡llÃ­tÃ¡sa az egÃ©rhez
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
 
-    // Képernyõ vetítési beállításai (Ortho 2D) - Bal felsõ sarok a (0,0)
+    // KÃ©pernyÃµ vetÃ­tÃ©si beÃ¡llÃ­tÃ¡sai (Ortho 2D) - Bal felsÃµ sarok a (0,0)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, WINDOW_WIDTH, WINDOW_HEIGHT, 0.0, -1.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // fekete háttér
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // fekete hÃ¡ttÃ©r
 
-    // Fõ ciklus
+    // FÃµ ciklus
     while (!glfwWindowShouldClose(window)) {
         display();
         glfwSwapBuffers(window);
