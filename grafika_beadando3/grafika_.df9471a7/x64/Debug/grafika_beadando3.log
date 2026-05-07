@@ -1,0 +1,4 @@
+﻿  Source.cpp
+C:\Users\Péter\source\repos\grafika_beadando3\Source.cpp(226,55): warning C4305: '-=': truncation from 'double' to 'float'
+glfw3.lib(win32_joystick.obj) : warning LNK4099: PDB '' was not found with 'glfw3.lib(win32_joystick.obj)' or at ''; linking object as if no debug info
+  grafika_beadando3.vcxproj -> C:\Users\Péter\source\repos\grafika_beadando3\x64\Debug\grafika_beadando3.exe
